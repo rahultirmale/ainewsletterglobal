@@ -1,0 +1,487 @@
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#050510;color:#e0e0f0;font-family:'Exo 2',system-ui,sans-serif}
+
+/* ===== CSS VARIABLES ===== */
+:root{
+  --sun-color:#ffd700;
+  --core-color:#ffd700;
+  --wrapper-color:#6ec6ff;
+  --industry-color:#c97dff;
+  --glass-bg:rgba(12,12,35,0.82);
+  --glass-border:rgba(255,255,255,0.08);
+  --panel-width:440px;
+  --header-height:70px;
+}
+
+/* ===== HEADER ===== */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:400;
+  height:var(--header-height);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 30px;
+  background:linear-gradient(180deg,rgba(5,5,16,0.95) 0%,rgba(5,5,16,0.6) 80%,transparent 100%);
+  backdrop-filter:blur(12px);
+}
+.logo{
+  font-family:'Orbitron',monospace;font-size:1.35rem;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#ffd700 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo span{font-weight:900}
+.tagline{font-size:0.65rem;opacity:0.45;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+
+/* Week selector */
+.header-center{display:flex;flex-direction:column;align-items:center;gap:4px}
+#week-selector{display:flex;align-items:center;gap:6px}
+.week-nav{
+  background:none;border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+  color:#fff;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  transition:all 0.25s;
+}
+.week-nav:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25)}
+#week-tabs{display:flex;gap:3px}
+.week-tab{
+  padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.72rem;font-weight:500;
+  letter-spacing:0.5px;color:rgba(255,255,255,0.45);
+  transition:all 0.3s;border:1px solid transparent;
+}
+.week-tab:hover{color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.05)}
+.week-tab.active{
+  color:#fff;background:rgba(255,215,0,0.12);border-color:rgba(255,215,0,0.3);
+  box-shadow:0 0 12px rgba(255,215,0,0.15);
+}
+#week-date-range{font-size:0.68rem;color:rgba(255,255,255,0.35);letter-spacing:0.5px}
+
+/* Legend */
+.header-right{display:flex;align-items:center}
+#legend{display:flex;gap:16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:0.7rem;opacity:0.6}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* ===== UNIVERSE VIEWPORT ===== */
+#universe-viewport{
+  position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;
+  perspective:1200px;perspective-origin:50% 45%;
+}
+#starfield{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+#universe{
+  position:absolute;top:var(--header-height);left:0;
+  width:100%;height:calc(100vh - var(--header-height));
+  z-index:1;
+}
+/* 3D decorative layer: tilted orbit rings, sun, nebulae — no pointer events */
+#universe-3d{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transform:rotateX(12deg);
+  pointer-events:none;
+}
+
+/* ===== NEBULA EFFECTS ===== */
+.nebula{position:absolute;border-radius:50%;pointer-events:none;filter:blur(80px);opacity:0.12;transform:translateZ(-100px)}
+.nebula-1{width:500px;height:500px;top:10%;left:5%;background:radial-gradient(circle,#1a0040,transparent 70%)}
+.nebula-2{width:400px;height:400px;bottom:15%;right:10%;background:radial-gradient(circle,#001a40,transparent 70%)}
+.nebula-3{width:350px;height:350px;top:50%;left:55%;background:radial-gradient(circle,#1a0030,transparent 70%)}
+
+/* ===== ORBITAL RINGS ===== */
+.orbit-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.06);
+  pointer-events:none;
+  top:50%;left:50%;
+  transform-style:preserve-3d;
+}
+.orbit-inner{
+  width:320px;height:320px;
+  border-color:rgba(255,215,0,0.08);
+  box-shadow:0 0 30px rgba(255,215,0,0.02) inset;
+  transform:translate(-50%,-50%) translateZ(40px);
+}
+.orbit-middle{
+  width:520px;height:520px;
+  border-color:rgba(110,198,255,0.08);
+  box-shadow:0 0 30px rgba(110,198,255,0.02) inset;
+  transform:translate(-50%,-50%) translateZ(0px);
+}
+.orbit-outer{
+  width:720px;height:720px;
+  border-color:rgba(201,125,255,0.08);
+  box-shadow:0 0 30px rgba(201,125,255,0.02) inset;
+  transform:translate(-50%,-50%) translateZ(-40px);
+}
+.orbit-outer2{
+  width:900px;height:900px;
+  border-color:rgba(180,100,255,0.06);
+  box-shadow:0 0 30px rgba(180,100,255,0.012) inset;
+  transform:translate(-50%,-50%) translateZ(-65px);
+}
+
+/* Orbit labels */
+.orbit-label{
+  position:absolute;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.15);pointer-events:none;
+  left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',monospace;
+}
+.orbit-label-inner{top:calc(50% - 175px)}
+.orbit-label-middle{top:calc(50% - 275px)}
+.orbit-label-outer{top:calc(50% - 375px)}
+
+/* ===== CENTRAL SUN ===== */
+#sun{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateZ(20px);
+  width:70px;height:70px;z-index:10;transform-style:preserve-3d;
+}
+.sun-body{
+  position:absolute;inset:15px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff 0%,#ffeaa7 30%,#ffd700 60%,#ff8c00 100%);
+  box-shadow:0 0 30px #ffd700,0 0 60px rgba(255,165,0,0.5);
+  z-index:3;
+}
+.sun-glow{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,215,0,0.3) 0%,transparent 70%);
+  animation:sunPulse 3s ease-in-out infinite;
+  z-index:2;
+}
+.sun-pulse{
+  position:absolute;inset:-20px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,215,0,0.08) 0%,transparent 70%);
+  animation:sunPulse 4s ease-in-out infinite 1s;
+  z-index:1;
+}
+.sun-label{
+  position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',monospace;font-size:0.6rem;color:rgba(255,215,0,0.7);
+  letter-spacing:2px;white-space:nowrap;text-transform:uppercase;
+}
+@keyframes sunPulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.2);opacity:0.7}
+}
+
+/* ===== CELESTIAL BODIES ===== */
+.celestial-body{
+  position:absolute;cursor:pointer;z-index:20;
+  transition:filter 0.3s;
+  padding:12px;margin:-12px;
+}
+.celestial-body:hover{z-index:30;filter:brightness(1.4)}
+.celestial-body:hover .body-dot{transform:scale(1.25)}
+.celestial-body:hover .body-ring{opacity:1;transform:scale(1.3)}
+.celestial-body:hover .body-name{opacity:1;color:#fff}
+
+.body-icon{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:calc(var(--size) * 0.55);line-height:1;
+  filter:saturate(0) brightness(2);opacity:0.85;pointer-events:none;
+}
+.body-dot{
+  width:var(--size);height:var(--size);border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), var(--color) 60%);
+  box-shadow:0 0 calc(var(--size) * 0.6) var(--color), 0 0 calc(var(--size) * 1.2) var(--color-alpha);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;z-index:2;
+  animation:bodyFloat var(--float-dur) ease-in-out infinite;
+}
+.body-ring{
+  position:absolute;inset:calc(var(--size) * -0.35);border-radius:50%;
+  border:1px solid var(--color-alpha);
+  opacity:0.4;z-index:1;
+  transition:all 0.35s;
+}
+.body-name{
+  position:absolute;top:calc(var(--size) + 6px);left:50%;transform:translateX(-50%);
+  font-size:0.62rem;font-weight:600;letter-spacing:0.5px;white-space:nowrap;
+  color:rgba(255,255,255,0.55);transition:all 0.3s;
+  text-shadow:0 0 10px rgba(0,0,0,0.8);
+}
+.body-news-count{
+  position:absolute;top:-6px;right:calc(50% - var(--size)/2 - 8px);
+  background:rgba(255,70,70,0.9);color:#fff;font-size:0.5rem;font-weight:700;
+  width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 8px rgba(255,70,70,0.5);z-index:5;
+  opacity:0.9;
+}
+
+@keyframes bodyFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-3px)}
+}
+
+/* ===== WEEK TRANSITION EFFECTS ===== */
+.week-transitioning .body-dot{animation:weekPulse 0.6s ease-out !important}
+@keyframes weekPulse{
+  0%{filter:brightness(1)}
+  30%{filter:brightness(2.2);box-shadow:0 0 40px var(--color)}
+  100%{filter:brightness(1)}
+}
+.week-transitioning .orbit-ring{border-color:rgba(255,255,255,0.18) !important;transition:border-color 0.4s}
+
+/* ===== SHOOTING STARS ===== */
+.shooting-star{
+  position:absolute;width:100px;height:1px;pointer-events:none;z-index:5;
+  background:linear-gradient(90deg,rgba(255,255,255,0.8),transparent);
+  animation:shootingStar 1.2s linear forwards;
+}
+@keyframes shootingStar{
+  0%{opacity:1;transform:translateX(0) scaleX(1)}
+  100%{opacity:0;transform:translateX(300px) scaleX(0.3)}
+}
+
+/* ===== TOOLTIP ===== */
+#tooltip{
+  position:fixed;z-index:500;pointer-events:none;
+  max-width:300px;padding:14px 18px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  transition:opacity 0.2s,transform 0.2s;
+}
+#tooltip.hidden{opacity:0;transform:translateY(6px);pointer-events:none}
+#tooltip.visible{opacity:1;transform:translateY(0)}
+.tooltip-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tooltip-dot{font-size:1.1rem;flex-shrink:0;line-height:1}
+.tooltip-name{font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:700}
+.tooltip-layer-badge{
+  font-size:0.55rem;padding:2px 8px;border-radius:20px;
+  background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);
+  text-transform:uppercase;letter-spacing:0.8px;margin-left:auto;
+}
+.tooltip-news-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tooltip-news-list li{
+  font-size:0.72rem;line-height:1.4;padding-left:10px;
+  border-left:2px solid var(--color,rgba(255,255,255,0.15));
+  color:rgba(255,255,255,0.75);
+}
+.tooltip-news-list li .news-tag{
+  font-size:0.55rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;
+  color:var(--color,rgba(255,255,255,0.5));margin-right:4px;
+}
+.tooltip-hint{
+  margin-top:10px;font-size:0.6rem;color:rgba(255,255,255,0.3);
+  text-align:right;letter-spacing:0.5px;
+}
+
+/* ===== NEWS PANEL ===== */
+#news-panel{
+  position:fixed;top:0;right:0;z-index:500;
+  width:var(--panel-width);height:100vh;
+  padding-top:var(--header-height);
+  background:linear-gradient(135deg,rgba(8,8,30,0.98),rgba(15,10,40,0.98));
+  border-left:1px solid var(--glass-border);
+  backdrop-filter:blur(30px);
+  transform:translateX(100%);
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  overflow-y:auto;
+  box-shadow:-8px 0 40px rgba(0,0,0,0.4);
+}
+#news-panel.open{transform:translateX(0)}
+#panel-close{
+  position:absolute;top:16px;right:16px;z-index:10;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:#fff;font-size:1.2rem;width:32px;height:32px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+#panel-close:hover{background:rgba(255,70,70,0.2);border-color:rgba(255,70,70,0.3)}
+
+.panel-header{
+  display:flex;align-items:center;gap:16px;
+  padding:30px 28px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.panel-icon{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+}
+.panel-title{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700}
+.panel-layer{
+  font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;
+  color:rgba(255,255,255,0.4);
+}
+.panel-week-label{
+  padding:12px 28px;font-size:0.68rem;color:rgba(255,255,255,0.3);
+  letter-spacing:0.5px;text-transform:uppercase;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+
+.panel-body{padding:0 0 40px}
+
+/* Insight box */
+.panel-insight{
+  margin:16px 20px;padding:16px 18px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;
+}
+.insight-header{
+  font-family:'Orbitron',monospace;font-size:0.65rem;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;
+  color:rgba(255,255,255,0.5);
+}
+.insight-text{
+  font-size:0.78rem;line-height:1.65;color:rgba(255,255,255,0.65);
+  font-style:italic;
+}
+
+/* News items */
+.panel-news-item{
+  padding:0 0 20px;margin:0 20px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.panel-news-item:last-child{border-bottom:none}
+.news-item-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px;margin-bottom:12px;
+  border-radius:10px;
+}
+.news-item-icon{font-size:1.3rem}
+.panel-news-tag{
+  display:inline-block;font-size:0.58rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.8px;padding:3px 10px;
+  border-radius:20px;
+}
+.panel-news-title{font-size:0.92rem;font-weight:600;line-height:1.4;margin-bottom:4px;padding:0 8px}
+.panel-news-date{font-size:0.65rem;color:rgba(255,255,255,0.3);margin-bottom:8px;padding:0 8px}
+.panel-news-summary{
+  font-size:0.8rem;line-height:1.5;color:rgba(255,255,255,0.75);
+  font-weight:500;margin-bottom:8px;padding:0 8px;
+}
+.panel-news-detail{
+  font-size:0.75rem;line-height:1.65;color:rgba(255,255,255,0.45);padding:0 8px;
+}
+
+/* ===== PLANET LANDING VIEW ===== */
+#landing-overlay{
+  position:fixed;top:0;left:0;width:100vw;height:100vh;
+  z-index:300;display:flex;flex-direction:column;align-items:center;
+  overflow-y:auto;overflow-x:hidden;
+  transition:opacity 0.45s,visibility 0.45s;
+}
+#landing-overlay.landing-hidden{opacity:0;visibility:hidden;pointer-events:none}
+#landing-overlay.landing-visible{opacity:1;visibility:visible;pointer-events:all}
+
+.landing-backdrop{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(5,5,16,0.92);backdrop-filter:blur(10px);z-index:-1;
+}
+
+#landing-back{
+  position:fixed;top:20px;left:24px;z-index:310;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  color:#fff;padding:10px 20px;border-radius:10px;
+  font-family:'Orbitron',monospace;font-size:0.72rem;letter-spacing:1px;
+  cursor:pointer;transition:all 0.3s;
+}
+#landing-back:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);transform:translateX(-3px)}
+
+.landing-planet{
+  margin-top:100px;display:flex;flex-direction:column;align-items:center;
+  position:relative;
+  animation:landingZoomIn 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes landingZoomIn{
+  0%{transform:scale(0.15) translateY(60px);opacity:0}
+  100%{transform:scale(1) translateY(0);opacity:1}
+}
+
+.landing-planet-glow{
+  position:absolute;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,var(--glow-color,rgba(255,255,255,0.15)) 0%,transparent 70%);
+  top:-50px;left:50%;transform:translateX(-50%);
+  animation:sunPulse 3s ease-in-out infinite;z-index:-1;
+}
+.landing-planet-body{
+  width:130px;height:130px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.6),var(--planet-color,#888) 55%,rgba(0,0,0,0.3) 100%);
+  box-shadow:0 0 50px var(--planet-color,#888),0 0 100px var(--glow-color,rgba(255,255,255,0.2)),inset 0 -20px 40px rgba(0,0,0,0.4);
+}
+.landing-planet-name{
+  font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;
+  margin-top:18px;letter-spacing:3px;
+}
+.landing-planet-layer{
+  font-size:0.68rem;text-transform:uppercase;letter-spacing:1.5px;
+  opacity:0.45;margin-top:4px;
+}
+.landing-week-label{
+  margin-top:14px;font-size:0.7rem;color:rgba(255,255,255,0.3);
+  letter-spacing:0.5px;text-transform:uppercase;
+}
+
+.landing-news-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:20px;max-width:1100px;width:90%;
+  margin:40px auto 60px;
+  animation:landingCardsUp 0.7s 0.25s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes landingCardsUp{
+  0%{transform:translateY(50px);opacity:0}
+  100%{transform:translateY(0);opacity:1}
+}
+
+.landing-news-card{
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  border-radius:16px;padding:24px 26px;backdrop-filter:blur(20px);
+  transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s;
+}
+.landing-news-card:hover{
+  transform:translateY(-5px);border-color:rgba(255,255,255,0.18);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+.landing-news-card .card-tag{
+  display:inline-block;font-size:0.58rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.8px;
+  padding:3px 10px;border-radius:20px;margin-bottom:10px;
+}
+.landing-news-card .card-title{font-size:1rem;font-weight:600;line-height:1.45;margin-bottom:6px}
+.landing-news-card .card-date{font-size:0.65rem;color:rgba(255,255,255,0.3);margin-bottom:12px}
+.landing-news-card .card-detail{font-size:0.8rem;line-height:1.7;color:rgba(255,255,255,0.55)}
+
+/* Landing scrollbar */
+#landing-overlay::-webkit-scrollbar{width:5px}
+#landing-overlay::-webkit-scrollbar-track{background:transparent}
+#landing-overlay::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){
+  .orbit-inner{width:250px;height:250px}
+  .orbit-middle{width:410px;height:410px}
+  .orbit-outer{width:570px;height:570px}
+  .orbit-outer2{width:720px;height:720px}
+  .orbit-label-inner{top:calc(50% - 140px)}
+  .orbit-label-middle{top:calc(50% - 220px)}
+  .orbit-label-outer{top:calc(50% - 300px)}
+  :root{--panel-width:360px}
+}
+@media(max-width:800px){
+  #header{padding:0 14px}
+  .header-left .tagline{display:none}
+  #legend{display:none}
+  .week-tab{padding:4px 8px;font-size:0.65rem}
+  .orbit-inner{width:200px;height:200px}
+  .orbit-middle{width:330px;height:330px}
+  .orbit-outer{width:460px;height:460px}
+  .orbit-outer2{width:580px;height:580px}
+  .orbit-label{display:none}
+  :root{--panel-width:100vw}
+  #sun{width:50px;height:50px}
+  #universe-viewport{perspective:800px}
+  #universe-3d{transform:rotateX(8deg)}
+  .landing-planet{margin-top:80px}
+  .landing-planet-body{width:80px;height:80px}
+  .landing-planet-glow{width:140px;height:140px;top:-30px}
+  .landing-planet-name{font-size:1.15rem}
+  .landing-news-grid{grid-template-columns:1fr;width:95%}
+  #landing-back{top:14px;left:14px;padding:8px 14px;font-size:0.65rem}
+}
+
+/* ===== SCROLLBAR ===== */
+#news-panel::-webkit-scrollbar{width:5px}
+#news-panel::-webkit-scrollbar-track{background:transparent}
+#news-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px}
