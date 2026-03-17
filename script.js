@@ -983,7 +983,7 @@ function createBodies() {
     el.innerHTML = `
       <div class="body-ring"></div>
       <div class="body-dot"><span class="body-icon">${def.icon}</span></div>
-      <div class="body-name">${def.icon} ${def.name}</div>
+      <div class="body-name"><span class="name-icon">${def.icon} </span>${def.name}</div>
       <div class="body-news-count" style="display:none"></div>
     `;
 
