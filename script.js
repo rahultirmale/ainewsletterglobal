@@ -1257,127 +1257,194 @@ function setupEventListeners() {
   document.getElementById('music-toggle').addEventListener('click', toggleMusic);
 }
 
-// ===== AMBIENT SPACE MUSIC (Web Audio API) =====
+// ===== MELODIC SPACE MUSIC (Web Audio API) =====
 let audioCtx = null;
 let musicPlaying = false;
 let musicNodes = [];
+let melodyTimer = null;
+let chordIndex = 0;
+let masterGain = null;
 
 function toggleMusic() {
-  if (musicPlaying) {
-    stopMusic();
-  } else {
-    startMusic();
+  if (musicPlaying) stopMusic(); else startMusic();
+}
+
+// Auto-start music on first user interaction
+let musicAutoStarted = false;
+function autoStartMusic() {
+  if (musicAutoStarted) return;
+  musicAutoStarted = true;
+  startMusic();
+  document.removeEventListener('click', autoStartMusic);
+  document.removeEventListener('touchstart', autoStartMusic);
+}
+document.addEventListener('click', autoStartMusic, { once: false });
+document.addEventListener('touchstart', autoStartMusic, { once: false });
+
+function createReverb(ctx, duration, decay) {
+  const rate = ctx.sampleRate;
+  const len = rate * duration;
+  const impulse = ctx.createBuffer(2, len, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
   }
+  const conv = ctx.createConvolver();
+  conv.buffer = impulse;
+  return conv;
 }
 
 function startMusic() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (musicPlaying) return;
 
   musicNodes = [];
-  const master = audioCtx.createGain();
-  master.gain.value = 0.35;
-  master.connect(audioCtx.destination);
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0;
+  masterGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
+  masterGain.connect(audioCtx.destination);
 
-  // Deep space drone — layered low pads
-  const droneNotes = [55, 82.41, 110]; // A1, E2, A2
-  droneNotes.forEach((freq, i) => {
-    const osc = audioCtx.createOscillator();
+  // Reverb bus
+  const reverb = createReverb(audioCtx, 3, 2.5);
+  const reverbGain = audioCtx.createGain();
+  reverbGain.gain.value = 0.35;
+  reverb.connect(reverbGain);
+  reverbGain.connect(masterGain);
+
+  // Dry bus
+  const dryGain = audioCtx.createGain();
+  dryGain.gain.value = 0.7;
+  dryGain.connect(masterGain);
+
+  // --- Chord progression (Cmaj7 → Am7 → Fmaj7 → G7sus4) ---
+  const chords = [
+    [130.81, 164.81, 196.00, 246.94],  // Cmaj7: C3 E3 G3 B3
+    [110.00, 130.81, 164.81, 196.00],  // Am7:   A2 C3 E3 G3
+    [87.31, 110.00, 130.81, 164.81],   // Fmaj7: F2 A2 C3 E3
+    [98.00, 130.81, 146.83, 174.61],   // G7sus4:G2 C3 D3 F3
+  ];
+
+  // Pad oscillators for chords
+  const padOscs = [];
+  const padGains = [];
+  for (let v = 0; v < 4; v++) {
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    filter.type = 'lowpass';
-    filter.frequency.value = 200 + i * 80;
-    filter.Q.value = 1;
-    gain.gain.value = 0;
-    gain.gain.linearRampToValueAtTime(0.12 - i * 0.02, audioCtx.currentTime + 3);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
-    osc.start();
-    musicNodes.push({ osc, gain });
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc2.detune.value = 6; // slight chorus
+    gain.gain.value = 0.06;
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(dryGain);
+    gain.connect(reverb);
+    osc1.frequency.value = chords[0][v];
+    osc2.frequency.value = chords[0][v];
+    osc1.start();
+    osc2.start();
+    padOscs.push([osc1, osc2]);
+    padGains.push(gain);
+    musicNodes.push({ osc: osc1 }, { osc: osc2 }, { gain });
+  }
 
-    // Slow LFO for gentle pulsing
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-    lfo.type = 'sine';
-    lfo.frequency.value = 0.05 + i * 0.02;
-    lfoGain.gain.value = 0.03;
-    lfo.connect(lfoGain);
-    lfoGain.connect(gain.gain);
-    lfo.start();
-    musicNodes.push({ osc: lfo, gain: lfoGain });
-  });
-
-  // Ethereal high pad — shimmering texture
-  const padNotes = [329.63, 440, 523.25]; // E4, A4, C5
-  padNotes.forEach((freq, i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    // Gentle detune for chorus effect
-    osc.detune.value = (i - 1) * 8;
-    filter.type = 'bandpass';
-    filter.frequency.value = freq;
-    filter.Q.value = 3;
-    gain.gain.value = 0;
-    gain.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 4);
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
-    osc.start();
-    musicNodes.push({ osc, gain });
-  });
-
-  // Cosmic twinkle — random high-frequency pings
-  function scheduleTwinkle() {
+  // Transition chords every 6 seconds
+  chordIndex = 0;
+  function nextChord() {
     if (!musicPlaying) return;
-    const notes = [880, 1108.73, 1318.51, 1567.98, 1760, 2093]; // A5-C7 pentatonic
-    const freq = notes[Math.floor(Math.random() * notes.length)];
+    chordIndex = (chordIndex + 1) % chords.length;
+    const t = audioCtx.currentTime;
+    for (let v = 0; v < 4; v++) {
+      padOscs[v][0].frequency.linearRampToValueAtTime(chords[chordIndex][v], t + 2);
+      padOscs[v][1].frequency.linearRampToValueAtTime(chords[chordIndex][v], t + 2);
+    }
+    melodyTimer = setTimeout(nextChord, 6000);
+  }
+  melodyTimer = setTimeout(nextChord, 6000);
+
+  // --- Arpeggio melody ---
+  const melodyNotes = [
+    // Phrase 1 (over Cmaj7)
+    523.25, 659.25, 783.99, 987.77, 783.99, 659.25,
+    // Phrase 2 (over Am7)
+    440.00, 523.25, 659.25, 783.99, 659.25, 523.25,
+    // Phrase 3 (over Fmaj7)
+    349.23, 440.00, 523.25, 659.25, 523.25, 440.00,
+    // Phrase 4 (over G7sus4)
+    392.00, 523.25, 587.33, 698.46, 587.33, 523.25,
+  ];
+  let noteIndex = 0;
+
+  function playMelodyNote() {
+    if (!musicPlaying) return;
+    const freq = melodyNotes[noteIndex % melodyNotes.length];
+    noteIndex++;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
     osc.type = 'sine';
     osc.frequency.value = freq;
-    filter.type = 'highpass';
-    filter.frequency.value = 600;
-    gain.gain.value = 0;
     const t = audioCtx.currentTime;
-    gain.gain.linearRampToValueAtTime(0.04 + Math.random() * 0.03, t + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5 + Math.random());
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.07, t + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 2.2);
+    osc.connect(gain);
+    gain.connect(dryGain);
+    gain.connect(reverb);
     osc.start(t);
     osc.stop(t + 2.5);
-    setTimeout(scheduleTwinkle, 800 + Math.random() * 2500);
+    // Vary timing: 500-700ms for flowing arpeggio
+    setTimeout(playMelodyNote, 500 + Math.random() * 200);
   }
-  scheduleTwinkle();
+  setTimeout(playMelodyNote, 2000); // start melody after 2s
 
-  // Sub-bass pulse — heartbeat of the universe
+  // --- Gentle high twinkle (pentatonic sparkle) ---
+  function scheduleTwinkle() {
+    if (!musicPlaying) return;
+    const sparkle = [1318.51, 1567.98, 1760, 2093, 2349.32]; // E6-D7
+    const freq = sparkle[Math.floor(Math.random() * sparkle.length)];
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const t = audioCtx.currentTime;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.025 + Math.random() * 0.02, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+    osc.connect(gain);
+    gain.connect(reverb);
+    osc.start(t);
+    osc.stop(t + 2);
+    setTimeout(scheduleTwinkle, 1500 + Math.random() * 3000);
+  }
+  setTimeout(scheduleTwinkle, 4000);
+
+  // --- Sub bass drone ---
   const sub = audioCtx.createOscillator();
   const subGain = audioCtx.createGain();
   sub.type = 'sine';
-  sub.frequency.value = 36.71; // D1
+  sub.frequency.value = 65.41; // C2
   subGain.gain.value = 0;
-  subGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 5);
-  const subLfo = audioCtx.createOscillator();
-  const subLfoGain = audioCtx.createGain();
-  subLfo.type = 'sine';
-  subLfo.frequency.value = 0.12;
-  subLfoGain.gain.value = 0.04;
-  subLfo.connect(subLfoGain);
-  subLfoGain.connect(subGain.gain);
+  subGain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 4);
   sub.connect(subGain);
-  subGain.connect(master);
+  subGain.connect(dryGain);
   sub.start();
-  subLfo.start();
-  musicNodes.push({ osc: sub, gain: subGain }, { osc: subLfo, gain: subLfoGain });
+  musicNodes.push({ osc: sub, gain: subGain });
 
-  musicNodes.push({ gain: master });
+  // LFO on sub for gentle movement
+  const subLfo = audioCtx.createOscillator();
+  const subLfoG = audioCtx.createGain();
+  subLfo.type = 'sine';
+  subLfo.frequency.value = 0.08;
+  subLfoG.gain.value = 0.02;
+  subLfo.connect(subLfoG);
+  subLfoG.connect(subGain.gain);
+  subLfo.start();
+  musicNodes.push({ osc: subLfo, gain: subLfoG });
+
+  musicNodes.push({ gain: masterGain }, { gain: reverbGain }, { gain: dryGain });
   musicPlaying = true;
   document.getElementById('music-icon').textContent = '🔊';
   document.getElementById('music-toggle').classList.add('playing');
@@ -1385,16 +1452,17 @@ function startMusic() {
 
 function stopMusic() {
   musicPlaying = false;
+  if (melodyTimer) clearTimeout(melodyTimer);
   const t = audioCtx ? audioCtx.currentTime : 0;
-  musicNodes.forEach(node => {
-    if (node.gain && node.gain.gain) {
-      try { node.gain.gain.linearRampToValueAtTime(0, t + 1.5); } catch(e) {}
-    }
-    if (node.osc) {
-      try { node.osc.stop(t + 2); } catch(e) {}
-    }
-  });
-  setTimeout(() => { musicNodes = []; }, 2500);
+  if (masterGain) {
+    try { masterGain.gain.linearRampToValueAtTime(0, t + 2); } catch(e) {}
+  }
+  setTimeout(() => {
+    musicNodes.forEach(node => {
+      try { if (node.osc) node.osc.stop(); } catch(e) {}
+    });
+    musicNodes = [];
+  }, 2500);
   document.getElementById('music-icon').textContent = '🔇';
   document.getElementById('music-toggle').classList.remove('playing');
 }
