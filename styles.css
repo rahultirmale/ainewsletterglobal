@@ -309,10 +309,19 @@ html{-webkit-text-size-adjust:100%}
   color:rgba(255,255,255,0.4);
 }
 .panel-week-label{
-  padding:12px 28px;font-size:0.68rem;color:rgba(255,255,255,0.3);
+  padding:10px 28px;font-size:0.68rem;color:rgba(255,255,255,0.3);
   letter-spacing:0.5px;text-transform:uppercase;
   border-bottom:1px solid rgba(255,255,255,0.04);
+  display:flex;align-items:center;justify-content:space-between;
 }
+.panel-week-text{flex:1;text-align:center}
+.panel-week-nav{
+  background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;
+  color:rgba(255,255,255,0.5);cursor:pointer;width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;flex-shrink:0;
+}
+.panel-week-nav:hover{background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.25)}
 
 .panel-body{padding:0 0 40px}
 
@@ -471,7 +480,7 @@ html{-webkit-text-size-adjust:100%}
   .header-left .tagline{display:none}
   .logo{font-size:1rem}
   .header-center{order:3;width:100%;flex-direction:row;justify-content:center;gap:8px;padding-bottom:2px}
-  #week-date-range{display:none}
+  #week-date-range{font-size:0.58rem}
   .header-right{order:2}
   #legend{display:none}
   .week-tab{padding:4px 8px;font-size:0.62rem}

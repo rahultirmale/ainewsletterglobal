@@ -1175,7 +1175,7 @@ function openPanel(bodyId) {
   panel.querySelector('.panel-title').textContent = def.name;
   panel.querySelector('.panel-layer').textContent = `${def.character}  ·  ${CONFIG.orbits[def.layer].label}`;
   panel.querySelector('.panel-layer').style.color = def.color;
-  panel.querySelector('.panel-week-label').textContent = `${week.label}  ·  ${week.dateRange}`;
+  panel.querySelector('.panel-week-text').textContent = `${week.label}  ·  ${week.dateRange}`;
 
   // Panel body content
   const body = panel.querySelector('.panel-body');
@@ -1230,6 +1230,8 @@ function setupEventListeners() {
   document.getElementById('prev-week').addEventListener('click', () => setWeek(state.weekIndex - 1));
   document.getElementById('next-week').addEventListener('click', () => setWeek(state.weekIndex + 1));
   document.getElementById('panel-close').addEventListener('click', closePanel);
+  document.getElementById('panel-prev-week').addEventListener('click', () => setWeek(state.weekIndex - 1));
+  document.getElementById('panel-next-week').addEventListener('click', () => setWeek(state.weekIndex + 1));
 
   // Close panel on Escape, arrow keys for week nav
   document.addEventListener('keydown', (e) => {
