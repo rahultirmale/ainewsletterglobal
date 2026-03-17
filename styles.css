@@ -55,6 +55,16 @@ html{-webkit-text-size-adjust:100%}
 }
 #week-date-range{font-size:0.68rem;color:rgba(255,255,255,0.35);letter-spacing:0.5px}
 
+/* Music toggle */
+#music-toggle{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;width:34px;height:34px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;transition:all 0.25s;margin-right:12px;
+}
+#music-toggle:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25)}
+#music-toggle.playing{border-color:rgba(255,215,0,0.3);box-shadow:0 0 12px rgba(255,215,0,0.15)}
+
 /* Legend */
 .header-right{display:flex;align-items:center}
 #legend{display:flex;gap:16px}

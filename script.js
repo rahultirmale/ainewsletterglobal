@@ -1252,6 +1252,151 @@ function setupEventListeners() {
     resizeCanvas();
     createStars();
   });
+
+  // Music toggle
+  document.getElementById('music-toggle').addEventListener('click', toggleMusic);
+}
+
+// ===== AMBIENT SPACE MUSIC (Web Audio API) =====
+let audioCtx = null;
+let musicPlaying = false;
+let musicNodes = [];
+
+function toggleMusic() {
+  if (musicPlaying) {
+    stopMusic();
+  } else {
+    startMusic();
+  }
+}
+
+function startMusic() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  musicNodes = [];
+  const master = audioCtx.createGain();
+  master.gain.value = 0.35;
+  master.connect(audioCtx.destination);
+
+  // Deep space drone — layered low pads
+  const droneNotes = [55, 82.41, 110]; // A1, E2, A2
+  droneNotes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    filter.type = 'lowpass';
+    filter.frequency.value = 200 + i * 80;
+    filter.Q.value = 1;
+    gain.gain.value = 0;
+    gain.gain.linearRampToValueAtTime(0.12 - i * 0.02, audioCtx.currentTime + 3);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    osc.start();
+    musicNodes.push({ osc, gain });
+
+    // Slow LFO for gentle pulsing
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.05 + i * 0.02;
+    lfoGain.gain.value = 0.03;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gain.gain);
+    lfo.start();
+    musicNodes.push({ osc: lfo, gain: lfoGain });
+  });
+
+  // Ethereal high pad — shimmering texture
+  const padNotes = [329.63, 440, 523.25]; // E4, A4, C5
+  padNotes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    // Gentle detune for chorus effect
+    osc.detune.value = (i - 1) * 8;
+    filter.type = 'bandpass';
+    filter.frequency.value = freq;
+    filter.Q.value = 3;
+    gain.gain.value = 0;
+    gain.gain.linearRampToValueAtTime(0.025, audioCtx.currentTime + 4);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    osc.start();
+    musicNodes.push({ osc, gain });
+  });
+
+  // Cosmic twinkle — random high-frequency pings
+  function scheduleTwinkle() {
+    if (!musicPlaying) return;
+    const notes = [880, 1108.73, 1318.51, 1567.98, 1760, 2093]; // A5-C7 pentatonic
+    const freq = notes[Math.floor(Math.random() * notes.length)];
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    filter.type = 'highpass';
+    filter.frequency.value = 600;
+    gain.gain.value = 0;
+    const t = audioCtx.currentTime;
+    gain.gain.linearRampToValueAtTime(0.04 + Math.random() * 0.03, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5 + Math.random());
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    osc.start(t);
+    osc.stop(t + 2.5);
+    setTimeout(scheduleTwinkle, 800 + Math.random() * 2500);
+  }
+  scheduleTwinkle();
+
+  // Sub-bass pulse — heartbeat of the universe
+  const sub = audioCtx.createOscillator();
+  const subGain = audioCtx.createGain();
+  sub.type = 'sine';
+  sub.frequency.value = 36.71; // D1
+  subGain.gain.value = 0;
+  subGain.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime + 5);
+  const subLfo = audioCtx.createOscillator();
+  const subLfoGain = audioCtx.createGain();
+  subLfo.type = 'sine';
+  subLfo.frequency.value = 0.12;
+  subLfoGain.gain.value = 0.04;
+  subLfo.connect(subLfoGain);
+  subLfoGain.connect(subGain.gain);
+  sub.connect(subGain);
+  subGain.connect(master);
+  sub.start();
+  subLfo.start();
+  musicNodes.push({ osc: sub, gain: subGain }, { osc: subLfo, gain: subLfoGain });
+
+  musicNodes.push({ gain: master });
+  musicPlaying = true;
+  document.getElementById('music-icon').textContent = '🔊';
+  document.getElementById('music-toggle').classList.add('playing');
+}
+
+function stopMusic() {
+  musicPlaying = false;
+  const t = audioCtx ? audioCtx.currentTime : 0;
+  musicNodes.forEach(node => {
+    if (node.gain && node.gain.gain) {
+      try { node.gain.gain.linearRampToValueAtTime(0, t + 1.5); } catch(e) {}
+    }
+    if (node.osc) {
+      try { node.osc.stop(t + 2); } catch(e) {}
+    }
+  });
+  setTimeout(() => { musicNodes = []; }, 2500);
+  document.getElementById('music-icon').textContent = '🔇';
+  document.getElementById('music-toggle').classList.remove('playing');
 }
 
 // ===== START =====
