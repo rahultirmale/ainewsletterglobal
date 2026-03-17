@@ -852,6 +852,7 @@ let state = {
 // ===== RESPONSIVE ORBIT SCALING =====
 function getOrbitScale() {
   const w = window.innerWidth;
+  if (w <= 480) return 0.38;
   if (w <= 800) return 0.55;
   if (w <= 1100) return 0.78;
   return 1;
